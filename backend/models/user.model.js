@@ -42,7 +42,7 @@ const userSchema = new Schema(
 			type: Number,
 			trim: true,
 			// required: true,
-			unique: [true, "This phone number is already used!"],
+			// unique: [true, "This phone number is already used!"],
 			match: /\d{9}/gm,
 		},
 		avatar: { type: Buffer },

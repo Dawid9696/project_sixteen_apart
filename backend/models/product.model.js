@@ -58,7 +58,6 @@ const productSchema = new Schema(
 		},
 		productStone: {
 			type: String,
-			// required: [true, "Material is required!"],
 			trim: true,
 			lowercase: true,
 			alias: "stone",
@@ -69,7 +68,6 @@ const productSchema = new Schema(
 		},
 		productMaterial: {
 			type: String,
-			// required: [true, "Material is required!"],
 			trim: true,
 			lowercase: true,
 			alias: "material",
@@ -79,7 +77,6 @@ const productSchema = new Schema(
 		},
 		productMechanism: {
 			type: String,
-			// required: [true, "Mechanism is required!"],
 			trim: true,
 			lowercase: true,
 			alias: "mechanism",
@@ -90,7 +87,6 @@ const productSchema = new Schema(
 		},
 		productEnvelope: {
 			type: String,
-			// required: [true, "Envelope is required!"],
 			trim: true,
 			lowercase: true,
 			alias: "envelope",
@@ -100,7 +96,6 @@ const productSchema = new Schema(
 		},
 		productBelt: {
 			type: String,
-			// required: [true, "Belt is required!"],
 			trim: true,
 			lowercase: true,
 			alias: "belt",
@@ -122,11 +117,11 @@ productSchema.statics.findProducts = (title) => {
 	var regexQuery = {
 		productName: new RegExp(title, "i"),
 	};
-	return RingProduct.find(regexQuery).select("productName productPrice productPhotos");
+	return Product.find(regexQuery).select("productName productPrice productPhotos");
 };
 
-productSchema.statics.findNewProducts = async () => {
-	return await Product.find().select("productName productPrice productPhotos").limit(4).sort({ createdAt: -1 });
+productSchema.statics.findNewProducts = () => {
+	return Product.find().select("productName productPrice productPhotos").limit(4).sort({ createdAt: -1 });
 };
 
 var Product = mongoose.model("Product", productSchema);

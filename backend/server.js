@@ -45,27 +45,19 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname + "/public"));
 
-app.use(
-	cookieSession({
-		maxAge: 24 * 60 * 60 * 1000,
-		keys: [process.env.COOKIE_KEY],
-	})
-);
-
 app.use(passport.initialize());
 app.use(passport.session());
 
-// app.post("./pay", async (req, res) => {
-// 	const { email } = req.body;
-// 	const paymentIntent = await stripe.paymentIntents.create({
-// 		amount: 5000,
-// 		currency: "pln",
-// 		// Verify your integration in this guide by including this parameter
-// 		metadata: { integration_check: "accept_a_payment" },
-// 		recepient_email: email,
-// 	});
-// 	res.json({ client_secret: paymentIntent["client_secret"] });
-// });
+app.post("./pay", async (req, res) => {
+	const { email } = req.body;
+	const paymentIntent = await stripe.paymentIntents.create({
+		amount: 5000,
+		currency: "pln",
+		metadata: { integration_check: "accept_a_payment" },
+		recepient_email: email,
+	});
+	res.json({ client_secret: paymentIntent["client_secret"] });
+});
 
 const products = require("./routes/products");
 const posts = require("./routes/posts");

@@ -4,6 +4,7 @@ const router = require("express").Router();
 
 //HELPERS
 const Authentication = require("../Helpers/Authentication");
+const passportAuth = require("../Helpers/GoogleAuth");
 const UserApprovment = require("../Helpers/UserApprovment");
 
 const passport = require("passport");
@@ -15,39 +16,43 @@ const util = require("util");
 const redisUrl = "redis://127.0.0.1:6379";
 const client = redis.createClient(redisUrl);
 client.get = util.promisify(client.get);
-let { authUser, googleAuthUser } = require("../models/user.model");
+let { authUser, googleAuthUser, facebookAuthUser } = require("../models/user.model");
 
-router.get("/auth/facebook", passport.authenticate("facebook"));
+router.post("/store", Authentication, async (req, res) => {
+	const session = await stripe.checkout.sessions.create({
+		success_url: "http://localhost:3000",
+		cancel_url: "http://localhost:3000",
+		// customer_email: req.user.email,
+		payment_method_types: ["card", "p24"],
+		line_items: shopp,
+		mode: "payment",
+	});
+	// res.json({ id: session.id });
+	res.send(session);
+});
 
-router.get("/auth/facebook/callback", passport.authenticate("facebook", { failureRedirect: "/login" }), function (req, res) {
-	// Successful authentication, redirect home.
-	res.redirect("/");
+router.get("/facebook", passport.authenticate("facebook"));
+
+router.get("/facebook/authenticated", passport.authenticate("facebook", { failureRedirect: "/login" }), function (req, res) {
+	res.redirect(`${req.baseUrl}/users`);
 });
 
 router.get("/google", passport.authenticate("google", { scope: ["profile"] }));
 
-// router.get("/g", passport.authenticate("google"), async (req, res) => {
-// 	res.redirect("/users");
-// });
+router.get("/authenticated", passport.authenticate("google"), async (req, res) => {
+	res.redirect(`${req.baseUrl}/users`);
+});
 
-router.get("/users", async (req, res) => {
+router.get("/users", passportAuth, Authentication, async (req, res) => {
 	const users = await authUser.find();
 	const googleUsers = await googleAuthUser.find();
-	const allUsers = [...users, ...googleUsers];
+	const facebookUsers = await facebookAuthUser.find();
+	const allUsers = [...users, ...googleUsers, ...facebookUsers];
 	res.send(allUsers);
-});
-router.get("/googleUsers", passport.authenticate("google", { scope: ["profile"] }), async (req, res) => {
-	const googleUsers = await googleAuthUser.find();
-	res.send(users);
 });
 
 //PROFILE
 router.get("/profile", Authentication, async (req, res) => {
-	const cachedUsers = await client.get(req.user.id);
-	if (cachedUsers) {
-		console.log("SERVING FROM CACHE");
-		return res.send(JSON.parse(cachedUsers));
-	}
 	await req.user
 		.populate({
 			path: "MyPosts",
@@ -56,7 +61,6 @@ router.get("/profile", Authentication, async (req, res) => {
 		.populate("numOfPosts")
 		.execPopulate()
 		.then((user) => {
-			client.set(req.user.id, JSON.stringify(user), "EX", 180);
 			res.send(user);
 		})
 		.catch((err) => res.status(400).json("Error: " + err));

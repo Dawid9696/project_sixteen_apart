@@ -13,43 +13,19 @@ client.get = util.promisify(client.get);
 
 let Post = require("../models/post.model");
 
-// router.get("/Posts", async (req, res) => {
-// 	const posts = await Post.ShowPosts(req.query.title)
-// 		.skip(req.query.page * 8)
-// 		.limit(8);
-
-// 	const key = JSON.stringify(req.query);
-// 	const cachedProducts = await client.get(key);
-
-// 	if (cachedProducts) {
-// 		const currentDataLength = JSON.parse(cachedProducts).length;
-// 		const incomingDataLegth = posts.length;
-// 		if (currentDataLength != incomingDataLegth) {
-// 			return client.flushall();
-// 		}
-// 		return res.send(JSON.parse(cachedProducts));
-// 	}
-// 	client.set(key, JSON.stringify(posts), "EX", 180);
-// 	res.send(posts);
-// });
-
 router.get("/Posts", async (req, res) => {
+	const key = JSON.stringify(Object.assign({}, { path: req.path }, req.query));
+	const cachedProducts = await client.get(key);
+
+	if (cachedProducts) {
+		return res.send(JSON.parse(cachedProducts));
+	}
+
 	const posts = await Post.ShowPosts(req.query.title)
 		.skip(req.query.page * 8)
 		.limit(8);
 
-	// const key = JSON.stringify(req.query);
-	// const cachedProducts = await client.get(key);
-
-	// if (cachedProducts) {
-	// 	const currentDataLength = JSON.parse(cachedProducts).length;
-	// 	const incomingDataLegth = posts.length;
-	// 	if (currentDataLength != incomingDataLegth) {
-	// 		return client.flushall();
-	// 	}
-	// 	return res.send(JSON.parse(cachedProducts));
-	// }
-	// client.set(key, JSON.stringify(posts), "EX", 180);
+	client.set(key, JSON.stringify(posts), "EX", 180);
 	res.send(posts);
 });
 
@@ -79,6 +55,11 @@ router.post("/addPost", Authentication, async (req, res) => {
 	newPost
 		.save()
 		.then(() => {
+			client.keys("*Posts*", function (err, keys) {
+				keys.forEach((item) => {
+					client.del(item);
+				});
+			});
 			res.send(newPost);
 		})
 		.catch((err) => {
@@ -91,6 +72,11 @@ router.delete("/deletePost/:id", Authentication, async (req, res) => {
 	try {
 		if (!req.user.admin) throw new Error("You have not permission to delete Product!");
 		const deletedPost = await Post.findByIdAndDelete(req.params.id);
+		client.keys("*Posts*", function (err, keys) {
+			keys.forEach((item) => {
+				client.del(item);
+			});
+		});
 		res.send(deletedPost);
 	} catch (err) {
 		throw new Error(err);
@@ -102,6 +88,11 @@ router.patch("/updatePost/:id", Authentication, async (req, res) => {
 	try {
 		if (!req.user.admin) throw new Error("You have not permission to update Product!");
 		const updatedPost = await Post.findByIdAndUpdate(req.params.id, req.body);
+		client.keys(`*${req.params.id}*`, function (err, keys) {
+			keys.forEach((item) => {
+				client.del(item);
+			});
+		});
 		res.send(updatedPost);
 	} catch (err) {
 		throw new Error(err);
@@ -117,12 +108,19 @@ router.post("/addComment/:Post", Authentication, async (req, res) => {
 	};
 	MyPost.comments.push(newComment);
 	await MyPost.save()
-		.then((Post) => res.send(Post))
+		.then((Post) => {
+			client.keys(`*${req.params.Post}*`, function (err, keys) {
+				keys.forEach((item) => {
+					client.del(item);
+				});
+			});
+			res.send(Post);
+		})
 		.catch((err) => res.status(400).json("Error: " + err));
 });
 
 //ADD COMMENT ROUTER
-router.post("/addComment/:Product/comment/:Comment", Authentication, async (req, res) => {
+router.post("/deleteComment/:Product/comment/:Comment", Authentication, async (req, res) => {
 	const MyProduct = await Post.findById(req.params.Product);
 	const commentToDelete = MyProduct.comments.find((comment) => {
 		return comment._id == req.params.Comment;
@@ -132,7 +130,14 @@ router.post("/addComment/:Product/comment/:Comment", Authentication, async (req,
 		return comment._id != req.param.Comment;
 	});
 	await MyProduct.save()
-		.then((Product) => res.send(Product))
+		.then((Product) => {
+			client.keys(`*${req.params.Product}*`, function (err, keys) {
+				keys.forEach((item) => {
+					client.del(item);
+				});
+			});
+			res.send(Product);
+		})
 		.catch((err) => res.status(400).json("Error: " + err));
 });
 

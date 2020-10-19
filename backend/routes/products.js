@@ -17,8 +17,8 @@ client.get = util.promisify(client.get);
 
 let { Product } = require("../models/product.model");
 
-//PRODUCTS
-router.get("/Product/:type", async (req, res) => {
+// PRODUCTS //type
+router.get("/Products/:type", async (req, res) => {
 	let query = Object.keys(req.query).reduce((mappedQuery, key) => {
 		let param = req.query[key];
 		if (param && key != "page") {
@@ -27,85 +27,69 @@ router.get("/Product/:type", async (req, res) => {
 		return mappedQuery;
 	}, {});
 
+	const key = JSON.stringify(Object.assign({}, req.params, req.query));
+	const cachedProducts = await client.get(key);
+
+	if (cachedProducts) {
+		console.log("From Cache");
+		return res.send(JSON.parse(cachedProducts));
+	}
+
 	const Products = await Product.find(query)
 		.where({ productType: req.params.type })
 		.skip(req.query.page * 8)
 		.limit(8)
 		.exec();
-
-	const key = JSON.stringify(req.query);
-	const cachedProducts = await client.get(key);
-
-	if (cachedProducts) {
-		console.log("cache");
-		const currentDataLength = JSON.parse(cachedProducts).length;
-		const incomingDataLegth = Products.length;
-		if (currentDataLength != incomingDataLegth) {
-			return client.flushall();
-		}
-		return res.send(JSON.parse(cachedProducts));
-	}
 	client.set(key, JSON.stringify(Products), "EX", 180);
 
 	res.send(Products);
 });
 
+//SEARCHED PRODUCT
 router.get("/Search", async (req, res) => {
-	try {
-		const Product = await Product.findProducts(req.query.title)
-			.skip(req.query.page * 8)
-			.limit(8);
-		const key = JSON.stringify(req.query);
-		const cachedProducts = await client.get(key);
-
-		if (cachedProducts) {
-			const currentDataLength = JSON.parse(cachedProducts).length;
-			const incomingDataLegth = Product.length;
-			if (currentDataLength != incomingDataLegth) {
-				return client.flushall();
-			}
-			return res.send(JSON.parse(cachedProducts));
-		}
-		client.set(key, JSON.stringify(Product), "EX", 180);
-		res.send(Product);
-	} catch (err) {
-		throw new Error(err);
+	const key = JSON.stringify(Object.assign({}, { path: req.path }, { title: req.query.title }));
+	const cachedProducts = await client.get(key);
+	console.log(key);
+	if (cachedProducts) {
+		console.log("From Cache");
+		return res.send(JSON.parse(cachedProducts));
 	}
+	const SearchedProduct = await Product.findProducts(req.query.title)
+		.skip(req.query.page * 8)
+		.limit(8);
+
+	client.set(key, JSON.stringify(SearchedProduct), "EX", 180);
+	res.send(SearchedProduct);
 });
 
-router.get("/:type/:id", async (req, res) => {
-	try {
-		const key = JSON.stringify(req.originalUrl);
-		const cachedMyProduct = await client.get(key);
-
-		if (cachedMyProduct) {
-			return res.send(JSON.parse(cachedMyProduct));
-		}
-		const MyProduct = await Product.findById(req.params.id).where({ productType: req.params.type });
-		client.set(key, JSON.stringify(MyProduct), "EX", 180);
-
-		res.send(MyProduct);
-	} catch (err) {
-		throw new Error(err);
+// type
+router.get("/Detail/:type/item/:id", async (req, res) => {
+	const key = JSON.stringify(Object.assign({}, { type: req.params.type }, { id: req.params.id }));
+	const cachedMyProduct = await client.get(key);
+	console.log(key);
+	if (cachedMyProduct) {
+		console.log("From Cache");
+		return res.send(JSON.parse(cachedMyProduct));
 	}
+	const MyProduct = await Product.findById(req.params.id).where({ productType: req.params.type });
+	client.set(key, JSON.stringify(MyProduct), "EX", 180);
+
+	res.send(MyProduct);
 });
 
+//newProducts
 router.get("/newProducts/:productType", async (req, res) => {
-	const { productType } = req.params;
-	try {
-		const key = JSON.stringify(req.originalUrl);
-		const cachedMyProduct = await client.get(key);
+	const key = JSON.stringify(Object.assign({}, { path: req.path }, { type: req.params.productType }));
+	const cachedMyProduct = await client.get(key);
 
-		if (cachedMyProduct) {
-			return res.send(JSON.parse(cachedMyProduct));
-		}
-		const newProducts = await Product.findNewProducts().where({ productType });
-		client.set(key, JSON.stringify(newProducts), "EX", 180);
-
-		res.send(newProducts);
-	} catch (err) {
-		throw new Error(err);
+	if (cachedMyProduct) {
+		console.log("From Cache");
+		return res.send(JSON.parse(cachedMyProduct));
 	}
+	const newProducts = await Product.findNewProducts().where({ productType });
+	client.set(key, JSON.stringify(newProducts), "EX", 180);
+
+	res.send(newProducts);
 });
 
 router.post("/addProduct", Authentication, async (req, res) => {
@@ -114,6 +98,11 @@ router.post("/addProduct", Authentication, async (req, res) => {
 	await newProduct
 		.save()
 		.then(() => {
+			client.keys("*type*", function (err, keys) {
+				keys.forEach((item) => {
+					client.del(item);
+				});
+			});
 			res.send(newProduct);
 		})
 		.catch((err) => {
@@ -142,6 +131,11 @@ router.delete("/deleteProduct/:id", Authentication, async (req, res) => {
 	try {
 		if (!req.user.admin) throw new Error("You have not permission to delete Product!");
 		await Product.findByIdAndDelete(req.params.id);
+		client.keys("*type*", function (err, keys) {
+			keys.forEach((item) => {
+				client.del(item);
+			});
+		});
 		res.send("Deleted");
 	} catch (err) {
 		throw new Error(err);
@@ -153,6 +147,11 @@ router.patch("/updateProduct/:id", Authentication, async (req, res) => {
 	try {
 		if (!req.user.admin) throw new Error("You have not permission to update Product!");
 		const updatedProduct = await Product.findByIdAndUpdate(req.params.id, req.body);
+		client.keys("*type*", function (err, keys) {
+			keys.forEach((item) => {
+				client.del(item);
+			});
+		});
 		res.send(updatedProduct);
 	} catch (err) {
 		throw new Error(err);
@@ -168,7 +167,11 @@ router.post("/addComment/:Product", Authentication, async (req, res) => {
 	};
 	MyProduct.comments.push(newComment);
 	await MyProduct.save()
-		.then((Product) => res.send(Product))
+		.then((response) => {
+			const key = JSON.stringify(Object.assign({}, { type: response.productType }, { id: req.params.Product }));
+			client.del(key);
+			res.send(response);
+		})
 		.catch((err) => res.status(400).json("Error: " + err));
 });
 
@@ -184,7 +187,11 @@ router.post("/deleteComment/:Product/comment/:Comment", Authentication, async (r
 		return comment._id != Comment;
 	});
 	await MyProduct.save()
-		.then((Product) => res.send(Product))
+		.then((response) => {
+			const key = JSON.stringify(Object.assign({}, { type: response.productType }, { id: req.params.Product }));
+			client.del(key);
+			res.send(response);
+		})
 		.catch((err) => res.status(400).json("Error: " + err));
 });
 
