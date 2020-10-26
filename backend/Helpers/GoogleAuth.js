@@ -1,5 +1,3 @@
-/** @format */
-
 const passportAuth = (req, res, next) => {
 	if (!req.user) {
 		req.locals = false;

@@ -1,23 +1,22 @@
-/** @format */
+const excel = require('excel4node');
 
-var excel = require("excel4node");
 const createExcel = (array) => {
-	var workbook = new excel.Workbook();
-	var worksheet = workbook.addWorksheet("List of Products");
-	var style = workbook.createStyle({
+	const workbook = new excel.Workbook();
+	const worksheet = workbook.addWorksheet('List of Products');
+	const style = workbook.createStyle({
 		font: {
-			color: "#FF0800",
+			color: '#FF0800',
 			size: 12,
 		},
-		numberFormat: "$#,##0.00; ($#,##0.00); -",
+		numberFormat: '$#,##0.00; ($#,##0.00); -',
 	});
 	worksheet
 		.cell(array.length + 1, 1)
-		.string("Nazwa produktu")
+		.string('Nazwa produktu')
 		.style(style);
 	worksheet
 		.cell(array.length + 1, 2)
-		.string("Cena produktu")
+		.string('Cena produktu')
 		.style(style);
 	array.forEach((item, index) => {
 		worksheet
@@ -29,7 +28,7 @@ const createExcel = (array) => {
 			.number(item.productPrice)
 			.style(style);
 	});
-	workbook.write("Excel.xlsx");
+	workbook.write('Excel.xlsx');
 };
 
 module.exports = createExcel;

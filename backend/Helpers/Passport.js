@@ -1,13 +1,17 @@
-/** @format */
 
-var passport = require("passport");
-var GoogleStrategy = require("passport-google-oauth").OAuth2Strategy;
-var FacebookStrategy = require("passport-facebook").Strategy;
-const { googleAuthUser, facebookAuthUser, User } = require("../models/user.model");
-require("dotenv").config();
+
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
+const FacebookStrategy = require('passport-facebook').Strategy;
+const {
+	googleAuthUser,
+	facebookAuthUser,
+	User,
+} = require('../models/user.model');
+require('dotenv').config();
 
 passport.serializeUser((userGoogle, done) => {
-	done(null, userGoogle._id);
+	done(null, userGoogle.id);
 });
 
 passport.deserializeUser((id, done) => {
@@ -17,51 +21,55 @@ passport.deserializeUser((id, done) => {
 });
 
 passport.use(
-	"google",
+	'google',
 	new GoogleStrategy(
 		{
 			clientID: process.env.GOOGLE_CLIENT_ID,
 			clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-			callbackURL: "/Apart/Profile/authenticated",
+			callbackURL: '/Apart/Profile/authenticated',
 		},
 		async (accessToken, refreshToken, profile, done) => {
 			console.log(accessToken);
-			googleAuthUser.findOne({ googleId: profile.id }).then((currentUser, err) => {
-				if (!currentUser) {
-					new googleAuthUser({
-						name: profile.name.givenName,
-						surname: profile.name.familyName,
-						rules: true,
-						googleId: profile.id,
-					})
-						.save()
-						.then((newUser) => {
-							done(null, newUser);
-						});
-				} else {
-					done(null, currentUser);
-				}
-			});
-		}
-	)
+			googleAuthUser
+				.findOne({ googleId: profile.id })
+				.then((currentUser, err) => {
+					if (!currentUser) {
+						// eslint-disable-next-line new-cap
+						new googleAuthUser({
+							name: profile.name.givenName,
+							surname: profile.name.familyName,
+							rules: true,
+							googleId: profile.id,
+						})
+							.save()
+							.then((newUser) => {
+								done(null, newUser);
+							});
+					} else {
+						done(null, currentUser);
+					}
+				});
+		},
+	),
 );
 
 passport.use(
-	"facebook",
+	'facebook',
 	new FacebookStrategy(
 		{
 			clientID: process.env.FACEBOOK_APP_ID,
 			clientSecret: process.env.FACEBOOK_APP_SECRET,
-			callbackURL: "/Apart/Profile/facebook/authenticated",
+			callbackURL: '/Apart/Profile/facebook/authenticated',
 		},
 		function (accessToken, refreshToken, profile, doneCb) {
 			console.log(accessToken);
 			facebookAuthUser.findOne({ facebookId: profile.id }).then((currentUser, err) => {
 				if (!currentUser) {
-					console.log("Nowy user");
+					console.log('Nowy user');
+					// eslint-disable-next-line new-cap
 					new facebookAuthUser({
-						name: "user",
-						surname: "surname",
+						name: 'user',
+						surname: 'surname',
 						facebookId: profile.id,
 						phone: 564213879,
 						rules: true,
