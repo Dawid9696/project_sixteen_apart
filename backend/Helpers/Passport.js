@@ -7,7 +7,7 @@ const {
 	googleAuthUser,
 	facebookAuthUser,
 	User,
-} = require('../models/user.model');
+} = require('../../server/models/user.model');
 require('dotenv').config();
 
 passport.serializeUser((userGoogle, done) => {

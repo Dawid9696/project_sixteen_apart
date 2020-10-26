@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { authUser } = require('../models/user.model');
+const { authUser } = require('../../server/models/user.model');
 require('dotenv').config();
 
 const UserApprovment = async (req, res, next) => {

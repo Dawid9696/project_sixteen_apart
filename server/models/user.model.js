@@ -1,19 +1,19 @@
+/** @format */
 
-
-const mongoose = require('mongoose');
-const validator = require('validator');
-const bcrypt = require('bcrypt');
-require('dotenv').config();
-const jwt = require('jsonwebtoken');
-const Post = require('./post.model');
-const { ProductComment } = require('./product.model');
+const mongoose = require("mongoose");
+const validator = require("validator");
+const bcrypt = require("bcrypt");
+// require('dotenv').config();
+const jwt = require("jsonwebtoken");
+const Post = require("./post.model");
+const { ProductComment } = require("./product.model");
 
 const { Schema } = mongoose;
 const NewSchema = mongoose.Schema;
 
-const authUserOptions = { discriminatorKey: 'authUserKey' };
-const googleAuthUserOptions = { discriminatorKey: 'googleAuthUserKey' };
-const facebookAuthUserOptions = { discriminatorKey: 'facebookAuthUserKey' };
+const authUserOptions = { discriminatorKey: "authUserKey" };
+const googleAuthUserOptions = { discriminatorKey: "googleAuthUserKey" };
+const facebookAuthUserOptions = { discriminatorKey: "facebookAuthUserKey" };
 
 const userSchema = new NewSchema(
 	{
@@ -22,26 +22,22 @@ const userSchema = new NewSchema(
 			type: String,
 			required: true,
 			trim: true,
-			maxlength: [20, 'Name is too long!'],
+			maxlength: [20, "Name is too long!"],
 			lowercase: true,
 			validate(value) {
-				if (validator.isEmpty(value))
-					throw new Error('Please enter your name !');
-				if (!validator.isAlpha(value))
-					throw new Error(`Name: ${value} can not contain numbers !`);
+				if (validator.isEmpty(value)) throw new Error("Please enter your name !");
+				if (!validator.isAlpha(value)) throw new Error(`Name: ${value} can not contain numbers !`);
 			},
 		},
 		surname: {
 			type: String,
 			required: true,
 			trim: true,
-			maxlength: [20, 'Surname is to long!!'],
+			maxlength: [20, "Surname is to long!!"],
 			lowercase: true,
 			validate(value) {
-				if (validator.isEmpty(value))
-					throw new Error('Please enter your surname !');
-				if (!validator.isAlpha(value))
-					throw new Error(`Surname: ${value} can not contain numbers !`);
+				if (validator.isEmpty(value)) throw new Error("Please enter your surname !");
+				if (!validator.isAlpha(value)) throw new Error(`Surname: ${value} can not contain numbers !`);
 			},
 		},
 		phone: {
@@ -64,8 +60,7 @@ const userSchema = new NewSchema(
 			trim: true,
 			lowercase: true,
 			validate(value) {
-				if (!validator.isAlpha(value))
-					throw new Error(`City: ${value} can not contain numbers !`);
+				if (!validator.isAlpha(value)) throw new Error(`City: ${value} can not contain numbers !`);
 			},
 		},
 		postalCode: {
@@ -76,12 +71,12 @@ const userSchema = new NewSchema(
 		},
 		sex: {
 			type: String,
-			enum: ['MALE', 'FAMALE'],
+			enum: ["MALE", "FAMALE"],
 			trim: true,
 			// required: true,
 			validate(value) {
 				if (validator.isEmpty(value)) {
-					throw new Error('Please choose your sex!');
+					throw new Error("Please choose your sex!");
 				}
 			},
 		},
@@ -90,12 +85,12 @@ const userSchema = new NewSchema(
 			required: true,
 			validate(value) {
 				if (value !== true) {
-					throw new Error('You have to accept rules!');
+					throw new Error("You have to accept rules!");
 				}
 			},
 		},
-		myCart: [{ type: Schema.Types.ObjectId, ref: 'Product' }],
-		myWishList: [{ type: Schema.Types.ObjectId, ref: 'Product' }],
+		myCart: [{ type: Schema.Types.ObjectId, ref: "Product" }],
+		myWishList: [{ type: Schema.Types.ObjectId, ref: "Product" }],
 	},
 	{
 		timestamps: true,
@@ -104,29 +99,29 @@ const userSchema = new NewSchema(
 		strict: true,
 		toJSON: { virtuals: true },
 		toObject: { virtuals: true },
-	},
+	}
 );
 
-userSchema.virtual('fullname').get(function () {
-	return `${this.name  } ${  this.surname}`;
+userSchema.virtual("fullname").get(function () {
+	return `${this.name} ${this.surname}`;
 });
 
-userSchema.virtual('fullname').set(function () {
-	return `${this.name  } ${  this.surname}`;
+userSchema.virtual("fullname").set(function () {
+	return `${this.name} ${this.surname}`;
 });
 
-userSchema.virtual('MyPosts', {
-	ref: 'Post',
-	localField: '_id',
-	foreignField: 'postOwner',
+userSchema.virtual("MyPosts", {
+	ref: "Post",
+	localField: "_id",
+	foreignField: "postOwner",
 	justOne: false,
 	options: { createdAt: -1, limit: 5 },
 });
 
-userSchema.virtual('numOfPosts', {
-	ref: 'Post',
-	localField: '_id',
-	foreignField: 'postOwner',
+userSchema.virtual("numOfPosts", {
+	ref: "Post",
+	localField: "_id",
+	foreignField: "postOwner",
 	count: true,
 });
 
@@ -157,41 +152,41 @@ userSchema.statics.findByCredentials = async (email, password) => {
 	// eslint-disable-next-line no-use-before-define
 	const user = await authUser.findOne({ email });
 	if (!user) {
-		throw new Error('There is no user');
+		throw new Error("There is no user");
 	}
 	const isMatch = await bcrypt.compare(password, user.password);
 	if (!isMatch) {
-		throw new Error('There is no match bitch');
+		throw new Error("There is no match bitch");
 	}
 	return user;
 };
 
-userSchema.pre('save', async function (next) {
+userSchema.pre("save", async function (next) {
 	const user = this;
-	if (user.isModified('password')) {
+	if (user.isModified("password")) {
 		user.password = await bcrypt.hash(user.password, 8);
 	}
 	next();
 });
 
 // Delete user tasks when user is removed
-userSchema.pre('remove', async function (next) {
+userSchema.pre("remove", async function (next) {
 	const user = this;
 	await Post.deleteMany({ postOwner: user.id });
 	await ProductComment.deleteMany({ postedBy: user.id });
 	next();
 });
-const User = mongoose.model('User', userSchema);
+const User = mongoose.model("User", userSchema);
 
 const authUser = User.discriminator(
-	'authUser',
+	"authUser",
 	new mongoose.Schema(
 		{
 			email: {
 				type: String,
-				required: [true, 'E-mail is required!'],
+				required: [true, "E-mail is required!"],
 				trim: true,
-				unique: [true, 'E-mail exist!'],
+				unique: [true, "E-mail exist!"],
 				match: /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/g,
 				lowercase: true,
 				validate(value) {
@@ -202,13 +197,13 @@ const authUser = User.discriminator(
 			},
 			password: {
 				type: String,
-				required: [true, 'Password is required!'],
+				required: [true, "Password is required!"],
 				trim: true,
 				minlength: 8,
 				match: /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/gm,
 				validate(value) {
 					if (validator.isEmpty(value)) {
-						throw new Error('Password is required!');
+						throw new Error("Password is required!");
 					}
 				},
 			},
@@ -227,7 +222,7 @@ const authUser = User.discriminator(
 );
 
 const googleAuthUser = User.discriminator(
-	'googleAuthUser',
+	"googleAuthUser",
 	new mongoose.Schema(
 		{
 			googleId: {
@@ -240,7 +235,7 @@ const googleAuthUser = User.discriminator(
 );
 
 const facebookAuthUser = User.discriminator(
-	'facebookAuthUser',
+	"facebookAuthUser",
 	new mongoose.Schema(
 		{
 			facebookId: {

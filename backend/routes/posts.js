@@ -8,7 +8,7 @@ const redisUrl = 'redis://127.0.0.1:6379';
 const client = redis.createClient(redisUrl);
 client.get = util.promisify(client.get);
 
-const Post = require('../models/post.model');
+const Post = require('../../server/models/post.model');
 
 router.get('/Posts', async (req, res) => {
 	// const key = JSON.stringify(Object.assign({}, { path: req.path }, req.query));
