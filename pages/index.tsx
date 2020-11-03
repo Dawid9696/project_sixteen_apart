@@ -15,7 +15,7 @@ const motors = [
 ];
 
 const Home: React.FC = ({ newRings }: any) => {
-	const { data }: any = useSWR(`http://localhost:5000/Apart/Shop/newProducts/ring`, { initialData: newRings });
+	const { data }: any = useSWR(`http://localhost:3000/api/newProducts/ring`, { initialData: newRings });
 	return (
 		<Fragment>
 			<Head>
@@ -39,7 +39,7 @@ const Home: React.FC = ({ newRings }: any) => {
 export default Home;
 
 export const getStaticProps: GetStaticProps = async (context) => {
-	const res = await fetch("http://localhost:5000/Apart/Shop/newProducts/ring");
+	const res = await fetch("http://localhost:3000/api/newProducts/ring");
 	const newRings = await res.json();
 	return {
 		props: {
@@ -76,6 +76,7 @@ const CardsNews = styled.div`
 	box-sizing: border-box;
 	width: 100vw;
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
 	justify-content: center;
 	flex-direction: row;

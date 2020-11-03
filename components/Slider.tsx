@@ -56,23 +56,24 @@ function MySlider(props) {
 
 export default MySlider;
 
-const Slider = styled.div`
-	position: relative;
+const BasicOptions = styled.div`
 	margin: 0px;
 	padding: 0px;
 	box-sizing: border-box;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+`;
+
+const Slider = styled(BasicOptions)`
+	position: relative;
 	width: 100vw;
 	height: 60vh;
-	display: flex;
 	flex-direction: row;
-	align-items: center;
 	overflow: hidden;
 `;
 
-const Slide = styled.div`
-	margin: 0px;
-	padding: 0px;
-	box-sizing: border-box;
+const Slide = styled(BasicOptions)`
 	min-width: 100%;
 	height: 100%;
 	transform: ${(props) => `translateX(${props.distance}%)`};
@@ -112,21 +113,14 @@ const CursorTwo = styled.div`
 	}
 `;
 
-const Indicators = styled.div`
+const Indicators = styled(BasicOptions)`
 	position: absolute;
-	margin: 0px;
-	padding: 0px;
-	box-sizing: border-box;
-	display: flex;
-	justify-content: center;
-	align-items: center;
 	bottom: 2%;
 	left: calc(50% - 180px);
 `;
 
-const Pictures = styled.div`
+const Pictures = styled(BasicOptions)`
 	margin: 10px;
-	padding: 0px;
 	width: 100px;
 	height: 100px;
 	box-sizing: border-box;

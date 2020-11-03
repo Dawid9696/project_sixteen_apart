@@ -13,7 +13,7 @@ const Card: React.FC<CardProps> = ({ item }) => {
 	return (
 		<AppCard>
 			<Link as={`/Product/${item._id}`} href='/Product/[Product]' passHref scroll>
-				<Photo photo={`http://localhost:5000/Apart/Shop/product/photo/${item._id}`}></Photo>
+				<Photo photo={`http://localhost:3000/api/product/photo/${item._id}/item/${0}`}></Photo>
 			</Link>
 			<Title>{item.productName}</Title>
 			<Price>{item.productPrice} zł</Price>
@@ -23,13 +23,17 @@ const Card: React.FC<CardProps> = ({ item }) => {
 
 export default Card;
 
-const AppCard = styled.div`
-	margin: 10px;
+const BasicOptions = styled.div`
+	margin: 0px;
 	padding: 0px;
 	box-sizing: border-box;
 	display: flex;
 	align-items: center;
 	justify-content: center;
+`;
+
+const AppCard = styled.div`
+	margin: 10px;
 	flex-direction: column;
 	-webkit-box-shadow: 10px 10px 14px 0px rgba(0, 0, 0, 0.75);
 	-moz-box-shadow: 10px 10px 14px 0px rgba(0, 0, 0, 0.75);
@@ -42,36 +46,21 @@ const AppCard = styled.div`
 	}
 `;
 
-const Photo = styled.div`
-	margin: 0px;
-	padding: 0px;
+const Photo = styled(BasicOptions)`
 	box-sizing: border-box;
 	width: 250px;
 	height: 250px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
 	background-image: ${(props) => `url(${props.photo})`};
 	background-repeat: no-repeat;
 	background-position: center;
 `;
 
-const Title = styled.div`
+const Title = styled(BasicOptions)`
 	margin: 5px;
-	padding: 0px;
-	box-sizing: border-box;
 	font-size: 12px;
 	color: ${(props) => props.theme.colors.main};
-	display: flex;
-	align-items: center;
-	justify-content: center;
 `;
 
-const Price = styled.div`
+const Price = styled(BasicOptions)`
 	margin: 5px;
-	padding: 0px;
-	box-sizing: border-box;
-	display: flex;
-	align-items: center;
-	justify-content: center;
 `;

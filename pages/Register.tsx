@@ -1,72 +1,90 @@
 /** @format */
 
-import * as React from "react";
-import { useForm } from "react-hook-form";
+import React, { useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/router";
-import Link from "next/link";
 import Head from "next/head";
-import cookieCutter from "cookie-cutter";
 import styled from "styled-components";
-
-type FormData = {
-	email: string;
-	password: string;
-};
 
 const Register = () => {
 	const router = useRouter();
-	const { register, setValue, handleSubmit, errors } = useForm<FormData>();
-	const onSubmit = ({ email, password }) => {
-		const data = { email, password };
+	const [name, setName] = useState<string>();
+	const [password, setPassword] = useState<string>();
+	const [email, setEmail] = useState<string>();
+	const [surname, setSurname] = useState<string>();
+	const [address, setAddress] = useState<string>();
+	const [phone, setPhone] = useState<string>();
+	const [city, setCity] = useState<string>();
+	const [postalCode, setPostalCode] = useState<string>();
+	const [sex, setSex] = useState<string>();
+	const [rules, setRules] = useState<boolean>(true);
+
+	const registerUser = (e) => {
+		e.preventDefault();
+		const data = { name, password, email, surname, address, phone, city, postalCode, sex, rules };
 		axios
-			.post("localhost:5000/Apart/Profile/login", data)
+			.post("http://localhost:3000/api/register", data)
 			.then((res) => {
-				localStorage.setItem("cool-jwt", res.data.token);
-				cookieCutter.set("myCookie", res.data.token);
-				router.push("/");
+				setName("");
+				setPassword("");
+				setEmail("");
+				setSurname("");
+				setAddress("");
+				setPhone("");
+				setCity("");
+				setPostalCode("");
+				router.push("/Login");
 			})
-			.catch((err) => window.alert("Mistake"));
+			.catch(() => window.alert("Mistake"));
 	};
 
 	return (
 		<React.Fragment>
 			<Head>
-				<title>Login</title>
+				<title>Register</title>
 				<meta name='viewport' content='initial-scale=1.0, width=device-width' />
 			</Head>
 
-			<StyleForm onSubmit={handleSubmit(onSubmit)}>
+			<StyleForm onSubmit={registerUser}>
 				<InputDiv>
-					<StyledInput name='email' ref={register({ required: true, minLength: 3, maxLength: 20, pattern: /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g })} />
+					<StyledInput type='text' value={email} onChange={(e) => setEmail(e.target.value)} />
 					<StyledLabel>E-mail</StyledLabel>
 				</InputDiv>
-
-				{errors.email?.type === "required" && "Your input is required"}
-				{errors.email?.type === "minLength" && "Too short"}
-				{errors.email?.type === "minLength" && "Too long"}
-				{errors.email?.type === "pattern" && "Enter proper format !"}
 				<InputDiv>
-					<StyledInput
-						name='password'
-						ref={register({
-							required: true,
-							minLength: 3,
-							maxLength: 20,
-							pattern: /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/gm,
-						})}
-					/>
+					<StyledInput type='text' value={password} onChange={(e) => setPassword(e.target.value)} />
 					<StyledLabel>Password</StyledLabel>
 				</InputDiv>
-
-				{errors.password?.type === "required" && "Your input is required"}
-				{errors.password?.type === "minLength" && "Too short"}
-				{errors.password?.type === "minLength" && "Too long"}
-				{errors.password?.type === "pattern" && "Enter proper format !"}
-
-				<Button type='submit' style={{ margin: "10px" }}>
-					Zaloguj się
-				</Button>
+				<InputDiv>
+					<StyledInput type='text' value={name} onChange={(e) => setName(e.target.value)} />
+					<StyledLabel>Name</StyledLabel>
+				</InputDiv>
+				<InputDiv>
+					<StyledInput type='text' value={surname} onChange={(e) => setSurname(e.target.value)} />
+					<StyledLabel>Surname</StyledLabel>
+				</InputDiv>
+				<InputDiv>
+					<StyledInput type='text' value={phone} onChange={(e) => setPhone(e.target.value)} />
+					<StyledLabel>Phone</StyledLabel>
+				</InputDiv>
+				<InputDiv>
+					<StyledInput type='text' value={address} onChange={(e) => setAddress(e.target.value)} />
+					<StyledLabel>Address</StyledLabel>
+				</InputDiv>
+				<InputDiv>
+					<StyledInput type='text' value={city} onChange={(e) => setCity(e.target.value)} />
+					<StyledLabel>City</StyledLabel>
+				</InputDiv>
+				<InputDiv>
+					<StyledInput type='text' value={postalCode} onChange={(e) => setPostalCode(e.target.value)} />
+					<StyledLabel>Postal Code</StyledLabel>
+				</InputDiv>
+				<select name='cars' id='cars' onChange={(e) => setSex(e.target.value)}>
+					<option value='FAMALE'>Kobieta</option>
+					<option value='MALE'>Mężczyzna</option>
+				</select>
+				<button type='submit' style={{ margin: "10px" }}>
+					Zarejestruj się
+				</button>
 			</StyleForm>
 		</React.Fragment>
 	);
@@ -82,12 +100,10 @@ const StyleForm = styled.form`
 	justify-content: center;
 	align-items: center;
 	flex-direction: column;
-	-webkit-box-shadow: 10px 10px 14px 0px rgba(0, 0, 0, 0.75);
-	-moz-box-shadow: 10px 10px 14px 0px rgba(0, 0, 0, 0.75);
 	box-shadow: 10px 10px 14px 0px rgba(0, 0, 0, 0.75);
 `;
 
-const StyledLabel = styled.form`
+const StyledLabel = styled.label`
 	position: absolute;
 	margin: 20px;
 	padding: 0px;
@@ -120,11 +136,7 @@ const InputDiv = styled.div`
 	justify-content: center;
 	align-items: center;
 	border-bottom: 1px solid grey;
-	${StyledInput}:focus + ${StyledLabel} {
-		transition: 0.5s ease-in-out;
-		font-size: 18px;
-		transform: translateY(-20px);
-	}
+
 	@media (max-width: 768px) {
 		width: 70vw;
 	}
@@ -141,46 +153,6 @@ const Button = styled.button`
 	background-color: grey;
 	text-align: center;
 	border: unset;
-	color: white;
-	:hover {
-		cursor: pointer;
-	}
-	@media (max-width: 768px) {
-		width: 80%;
-	}
-`;
-
-const Google = styled.div`
-	margin: 5px;
-	padding: 0px;
-	box-sizing: border-box;
-	width: 20vw;
-	height: 40px;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	background-color: #eb5043;
-	text-align: center;
-	color: white;
-	:hover {
-		cursor: pointer;
-	}
-	@media (max-width: 768px) {
-		width: 80%;
-	}
-`;
-
-const Facebook = styled.div`
-	margin: 5px;
-	padding: 0px;
-	box-sizing: border-box;
-	width: 20vw;
-	height: 40px;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	background-color: #4c6db4;
-	text-align: center;
 	color: white;
 	:hover {
 		cursor: pointer;

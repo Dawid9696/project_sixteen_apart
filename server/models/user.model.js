@@ -3,7 +3,6 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
 const bcrypt = require("bcrypt");
-// require('dotenv').config();
 const jwt = require("jsonwebtoken");
 const Post = require("./post.model");
 const { ProductComment } = require("./product.model");
@@ -130,9 +129,8 @@ userSchema.methods.toJSON = function () {
 	const userObject = user.toObject();
 
 	delete userObject.password;
-	// delete userObject.tokens;
+	delete userObject.tokens;
 	delete userObject.avatar;
-	delete userObject.photo;
 	delete userObject.id;
 	delete userObject.t;
 	delete userObject.v;
@@ -142,14 +140,13 @@ userSchema.methods.toJSON = function () {
 
 userSchema.methods.generateAuthToken = async function () {
 	const user = this;
-	const token = jwt.sign({ _id: user.id.toString() }, process.env.JWT);
+	const token = jwt.sign({ _id: user.id.toString() }, process.env.JWT, { expiresIn: 3600 });
 	user.tokens = user.tokens.concat({ token });
 	await user.save();
 	return token;
 };
 
 userSchema.statics.findByCredentials = async (email, password) => {
-	// eslint-disable-next-line no-use-before-define
 	const user = await authUser.findOne({ email });
 	if (!user) {
 		throw new Error("There is no user");

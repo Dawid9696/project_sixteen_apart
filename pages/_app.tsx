@@ -2,7 +2,8 @@
 
 import "../styles/globals.css";
 import type { AppProps } from "next/app";
-import { AnimatePresence } from "framer-motion";
+import { Provider } from "react-redux";
+import { useStore } from "../store";
 
 //COMPONENTS
 import Layout from "../components/Layout";
@@ -24,6 +25,7 @@ function handleExitComplete() {
 }
 
 function MyApp({ Component, pageProps }: AppProps) {
+	const store = useStore(pageProps.initialReduxState);
 	const router = useRouter();
 	return (
 		<ThemeProvider theme={ApartTheme}>
@@ -34,11 +36,11 @@ function MyApp({ Component, pageProps }: AppProps) {
 					fetcher: (url: string) => axios.get(url).then((res) => res.data),
 				}}
 			>
-				<Layout>
-					{/* <AnimatePresence exitBeforeEnter onExitComplete={handleExitComplete}> */}
-					<Component {...pageProps} key={router.route} />
-					{/* </AnimatePresence> */}
-				</Layout>
+				<Provider store={store}>
+					<Layout>
+						<Component {...pageProps} />
+					</Layout>
+				</Provider>
 			</SWRConfig>
 		</ThemeProvider>
 	);

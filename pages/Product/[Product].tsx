@@ -2,30 +2,14 @@
 
 import Head from "next/head";
 import { GetStaticProps, GetStaticPaths } from "next";
-import axios from "axios";
 import { useRouter } from "next/router";
 import styled from "styled-components";
 import useSWR from "swr";
 import { Fragment } from "react";
-import { useForm } from "react-hook-form";
-
-type FormData = {
-	comment: string;
-};
 
 const Charm: React.FC = ({ product }: any) => {
 	const router = useRouter();
-	const { data }: any = useSWR(`http://localhost:5000/Apart/Shop/Detail/ring/item/${router.query.Product}`, { initialData: product });
-	const { register, setValue, handleSubmit, errors } = useForm<FormData>();
-	const onSubmit = ({ comment }) => {
-		const data = { comment };
-		axios
-			.post("http://vps-3afd9694.vps.ovh.net:5000/Pandora/login", data)
-			.then((res) => {
-				router.push("/");
-			})
-			.catch((err) => window.alert("Mistake"));
-	};
+	const { data }: any = useSWR(`http://localhost:3000/api/Detail/ring/item/${router.query.Product}`, { initialData: product });
 	return (
 		<Fragment>
 			<Head>
@@ -35,7 +19,7 @@ const Charm: React.FC = ({ product }: any) => {
 			<AppDetailCharm>
 				<SectionOne>
 					<Photos>
-						<Photo photo={`http://localhost:5000/Apart/Shop/product/photo/${data._id}`}></Photo>
+						<Photo photo={`http://localhost:3000/api/product/photo/${data._id}/item/${1}`}></Photo>
 					</Photos>
 					<Infos>
 						<Title>{data.productName}</Title>
@@ -59,35 +43,6 @@ const Charm: React.FC = ({ product }: any) => {
 						<DescriptionProduct>{data.productDescription}</DescriptionProduct>
 					</Descrpiton>
 				</SectionTwo>
-				<SectionThree>
-					<h3>Komentarze:</h3>
-					<Comments>
-						{!data.comments ? (
-							<p>Brak komentarzy</p>
-						) : (
-							data.comments.map((item, index) => {
-								<CommentCard key={index} item={item} />;
-							})
-						)}
-					</Comments>
-					<AddComment>
-						<StyleForm onSubmit={handleSubmit(onSubmit)}>
-							<Input
-								placeholder='Komentarz ...'
-								name='comment'
-								ref={register({ required: true, minLength: 3, maxLength: 20, pattern: /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g })}
-							/>
-							{errors.comment?.type === "required" && "Your input is required"}
-							{errors.comment?.type === "minLength" && "Too short"}
-							{errors.comment?.type === "minLength" && "Too long"}
-							{errors.comment?.type === "pattern" && "Enter proper format !"}
-
-							<Button type='submit' style={{ margin: "10px" }}>
-								Zaloguj się
-							</Button>
-						</StyleForm>
-					</AddComment>
-				</SectionThree>
 			</AppDetailCharm>
 		</Fragment>
 	);
@@ -95,7 +50,7 @@ const Charm: React.FC = ({ product }: any) => {
 export default Charm;
 
 export const getStaticPaths: GetStaticPaths = async () => {
-	const res = await fetch("http://localhost:5000/Apart/Shop/Productsids");
+	const res = await fetch("http://localhost:3000/api/Productsids");
 	const Products = await res.json();
 	const paths = Products.map((item) => ({
 		params: { Product: item._id },
@@ -103,7 +58,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
 	return { paths, fallback: false };
 };
 export const getStaticProps: GetStaticProps = async ({ params: { Product } }: any) => {
-	const res = await fetch(`http://localhost:5000/Apart/Shop/Detail/ring/item/${Product}`);
+	const res = await fetch(`http://localhost:3000/api/Detail/ring/item/${Product}`);
 	const product = await res.json();
 	return {
 		props: {
@@ -111,20 +66,6 @@ export const getStaticProps: GetStaticProps = async ({ params: { Product } }: an
 		},
 		revalidate: 1,
 	};
-};
-
-const CommentCard: React.FC<any> = ({ item }: any) => {
-	return (
-		<Comment>
-			<ProfilePhoto>
-				<PhotoComment></PhotoComment>
-			</ProfilePhoto>
-			<Content>
-				<Info></Info>
-				<Text></Text>
-			</Content>
-		</Comment>
-	);
 };
 
 const BasicOptions = styled.div`
@@ -240,70 +181,4 @@ const DescriptionProduct = styled(BasicOptions)`
 	margin: 5px;
 	font-size: 20px;
 	width: 100%;
-`;
-
-const SectionThree = styled(BasicOptions)`
-	font-size: 20px;
-	width: 100vw;
-`;
-
-const Comments = styled(BasicOptions)`
-	font-size: 20px;
-	width: 100vw;
-`;
-
-const AddComment = styled(BasicOptions)`
-	font-size: 20px;
-	width: 100vw;
-`;
-const StyleForm = styled(BasicOptions)`
-	font-size: 20px;
-	width: 100vw;
-`;
-const StyledInput = styled(BasicOptions)`
-	font-size: 20px;
-	width: 100vw;
-`;
-
-const Input = styled.input`
-	font-size: 20px;
-	width: 100vw; ;
-`;
-
-const Button = styled.button`
-	padding: 0px;
-	box-sizing: border-box;
-	font-size: 20px;
-	width: 100vw;
-	display: flex;
-	align-items: center;
-	flex-direction: column;
-`;
-
-const Comment = styled(BasicOptions)`
-	font-size: 20px;
-	width: 100vw;
-`;
-
-const ProfilePhoto = styled(BasicOptions)`
-	font-size: 20px;
-	width: 100vw;
-`;
-
-const PhotoComment = styled(BasicOptions)`
-	font-size: 20px;
-	width: 100vw;
-`;
-
-const Content = styled(BasicOptions)`
-	font-size: 20px;
-	width: 100vw;
-`;
-const Info = styled(BasicOptions)`
-	font-size: 20px;
-	width: 100vw;
-`;
-const Text = styled(BasicOptions)`
-	font-size: 20px;
-	width: 100vw;
 `;

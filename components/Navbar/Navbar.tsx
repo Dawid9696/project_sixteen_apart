@@ -2,26 +2,23 @@
 
 import styled from "styled-components";
 import Link from "next/link";
-import Cookies from "js-cookie";
-import cookieCutter from "cookie-cutter";
 import axios from "axios";
+import Cookies from "js-cookie";
 import { useRouter } from "next/router";
 import { Fragment } from "react";
 
-import { CgProfile, CgShoppingCart, CgHeart, CgLogIn, CgFileAdd, CgLogOut } from "react-icons/cg";
+import { CgProfile, CgShoppingCart, CgHeart, CgLogIn, CgLogOut } from "react-icons/cg";
 
-export default function Navbar() {
+const Navbar: React.FC<any> = ({ user }) => {
 	const router = useRouter();
-	const admin = Cookies.get("user");
 	const Logout = () => {
 		axios
-			.post("http://localhost:5000/Apart/Profile/logoutAll", "", { headers: { Authorization: `Bearer ${Cookies.get("myCookie")}` } })
+			.post("http://localhost:3000/api/logoutAll", "")
 			.then((res) => {
-				Cookies.remove("myCookie");
-				Cookies.remove("user");
+				Cookies.remove("role");
 				router.push("/Login");
 			})
-			.catch((err) => window.alert("Mistake"));
+			.catch(() => window.alert("Mistake"));
 	};
 	return (
 		<Nav>
@@ -42,14 +39,11 @@ export default function Navbar() {
 				</Link>
 			</Navigator>
 			<Panel>
-				<Input />
-				{Cookies.get("myCookie") ? (
+				{Cookies.get("role") ? (
 					<Fragment>
-						{admin && (
+						{Cookies.get("role") === "admin" && (
 							<Link href={"/AddCharm"} passHref scroll>
-								<PanelOption>
-									<CgFileAdd size='30px' />
-								</PanelOption>
+								<PanelOption>ADD PRODUCT</PanelOption>
 							</Link>
 						)}
 						<Link href={"/Profile"} passHref scroll>
@@ -82,7 +76,8 @@ export default function Navbar() {
 			</Panel>
 		</Nav>
 	);
-}
+};
+export default Navbar;
 
 const BasicOptions = styled.div`
 	margin: 0px;

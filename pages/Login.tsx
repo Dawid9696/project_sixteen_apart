@@ -19,12 +19,10 @@ const Login = () => {
 	const { register, setValue, handleSubmit, errors } = useForm<FormData>();
 	const onSubmit = ({ email, password }) => {
 		const data = { email, password };
-		console.log(data);
 		axios
-			.post("http://localhost:5000/Apart/Profile/login", data)
+			.post("http://localhost:3000/api/login", data)
 			.then((res) => {
-				cookieCutter.set("myCookie", res.data.token);
-				cookieCutter.set("user", res.data.role);
+				cookieCutter.set("role", res.data.role);
 				router.push("/");
 			})
 			.catch((err) => window.alert("Mistake"));
