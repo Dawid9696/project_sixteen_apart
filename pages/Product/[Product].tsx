@@ -19,7 +19,7 @@ const Charm: React.FC = ({ product }: any) => {
 			<AppDetailCharm>
 				<SectionOne>
 					<Photos>
-						<Photo photo={`http://localhost:3000/api/product/photo/${data._id}/item/${1}`}></Photo>
+						<Photo photo={`http://localhost:3000/api/product/photo/${data._id}/item/${0}`}></Photo>
 					</Photos>
 					<Infos>
 						<Title>{data.productName}</Title>
