@@ -38,38 +38,6 @@ const ssrCache = cacheableResponse({
 	send: ({ data, res }) => res.send(data),
 });
 
-const configureApp = (server) => {
-	server.use(
-		session({
-			secret:
-				"Kuxo9R4E1W+fzC9a/aJohGnCCJcRlnXA1VXhUNxiYzLWtDt1xamoQh/2E68gFUycrNa674Q3gHhbaKilVz07VSA/DZcjJ6LoEUTpuWHNAbKgILA26o2YyuN1PafG/ZzsNdPCfmf9IRrUEBupUHGpZcOje5p6yy0GjLkVBg71XEQ=",
-			resave: true,
-			saveUninitialized: true,
-		})
-	);
-
-	// security settings
-	// server.use(lusca({
-	//   csrf: true,
-	//   csp: {
-	// 	styleNonce: true,
-	// 	scriptNonce: true,
-	// 	policy: {
-	// 	  'default-src': env === 'dev' ? "'unsafe-eval' 'self'" : "'self'",
-	// 	},
-	//   },
-	//   xframe: 'SAMEORIGIN',
-	//   hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
-	//   xssProtection: true,
-	//   nosniff: true,
-	//   referrerPolicy: 'same-origin',
-	// }));
-
-	server.use(handler);
-
-	return server;
-};
-
 app
 	.prepare()
 	.then(() => {
@@ -94,8 +62,9 @@ app
 		server.all("*", (req, res) => {
 			return handle(req, res);
 		});
+		console.log(process.env.TEST_VARIABLE);
 		mongoose
-			.connect("mongodb+srv://dawid:dawid@cluster0.hjd9s.mongodb.net/apart?retryWrites=true&w=majority", {
+			.connect(process.env.ATLAS_URI, {
 				useNewUrlParser: true,
 				useUnifiedTopology: true,
 				useCreateIndex: true,
@@ -125,7 +94,7 @@ app
 			})
 		);
 
-		server.listen(PORT, (err) => {
+		server.listen(3000, (err) => {
 			if (err) throw err;
 			console.log(`Server is running on: ${chalk.blue(`http://localhost:${PORT}`)}`);
 		});
