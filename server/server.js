@@ -4,6 +4,7 @@ const express = require("express");
 const cacheableResponse = require("cacheable-response");
 const next = require("next");
 const mongoose = require("mongoose");
+const cors = require("cors");
 const PORT = process.env.PORT || 3000;
 const dev = process.env.NODE_ENV !== "production";
 const session = require("express-session");
@@ -45,6 +46,7 @@ app
 		server.use(express.json());
 		server.use(express.urlencoded({ extended: true }));
 		server.use(cookieParser());
+		server.use(cors());
 		server.use(passport.initialize());
 		server.use(passport.session());
 		const showRoutes = require("./routes/index.js");
